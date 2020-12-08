@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Posts on Project 3</title>
+    <link>/post/</link>
+    <description>Recent content in Posts on Project 3</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-US</language>
+    <lastBuildDate>Tue, 08 Dec 2020 00:00:00 +0000</lastBuildDate><atom:link href="/post/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Blog 1</title>
+      <link>/post/2020/12/08/blog-1/</link>
+      <pubDate>Tue, 08 Dec 2020 00:00:00 +0000</pubDate>
+      
+      <guid>/post/2020/12/08/blog-1/</guid>
+      <description>library(reticulate) test&amp;lt;-&amp;quot;Merry&amp;quot; test ## [1] &amp;quot;Merry&amp;quot; test=&amp;quot;Christmas&amp;quot; print(test) ## Christmas When using R and python, the two can preform the same functions, but the syntax is different.</description>
+    </item>
+    
+  </channel>
+</rss>

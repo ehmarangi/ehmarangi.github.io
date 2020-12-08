@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Projects on Project 3</title>
+    <link>/project/</link>
+    <description>Recent content in Projects on Project 3</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-US</language><atom:link href="/project/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Project 1: Exploratory Data Analysis</title>
+      <link>/project/project1/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/project/project1/</guid>
+      <description>Introduction Paragraph   For my project, I chose to analyze data from NBA players. One of the datasets contained the top 100 player’s names, rank, and team. The second dataset contained player’s names, position, type of injury, the amount of money they made while they were injured, and the number of games missed due to their injuries. I found this data online from two different websites and then created an excel sheet to organize the data and import it into R.</description>
+    </item>
+    
+    <item>
+      <title>Project 2</title>
+      <link>/project/project2/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/project/project2/</guid>
+      <description>Introduction Paragraph   For my project 2, I decided to use the combined data from my first project to look at the correlation between different variables a little more closely. My data is about different professional basketball players, their rank, their team, the position they play, their injuries, how many games they missed due to their injuries, and how much money they made per game they missed.</description>
+    </item>
+    
+  </channel>
+</rss>

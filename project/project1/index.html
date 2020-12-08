@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="author" content="Erika Marangi" />
+    
+    <link rel="shortcut icon" type="image/x-icon" href="/img/favicon.ico">
+    <title>Project 1: Exploratory Data Analysis</title>
+    <meta name="generator" content="Hugo 0.79.0" />
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="/css/main.css" />
+    <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+    <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:200,400,200bold,400old" />
+    
+    <!--[if lt IE 9]>
+			<script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+			<script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+		<![endif]-->
+
+    
+  </head>
+
+  <body>
+    <div id="wrap">
+      
+      <nav class="navbar navbar-default">
+  <div class="container">
+    <div class="navbar-header">
+      <a class="navbar-brand" href="/"><i class="fa fa-home"></i></a>
+      <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <div class="navbar-collapse collapse" id="navbar">
+      <ul class="nav navbar-nav navbar-right">
+      
+        
+        <li><a href="/post/">BLOG</a></li>
+        
+        <li><a href="/projects/">PROJECTS</a></li>
+        
+        <li><a href="/resume/">RESUME</a></li>
+        
+      
+      </ul>
+    </div>
+  </div>
+</nav>
+
+      <div class="container">
+        <div class="blog-post">
+          <h3>
+            <strong><a href="/project/project1/">Project 1: Exploratory Data Analysis</a></strong>
+          </h3>
+        </div>
+ 
+<div class="blog-title">
+          <h4>
+         January 1, 0001 
+            &nbsp;&nbsp;
+            
+          </h4>
+        </div>
+
+        <div class="panel panel-default">
+          <div class="panel-body">
+            <div class="blogpost">
+              
+<link href="/rmarkdown-libs/anchor-sections/anchor-sections.css" rel="stylesheet" />
+<script src="/rmarkdown-libs/anchor-sections/anchor-sections.js"></script>
+
+
+<h1>
+Introduction Paragraph
+<h1>
+<h4>
+<p>For my project, I chose to analyze data from NBA players. One of the datasets contained the top 100 player’s names, rank, and team. The second dataset contained player’s names, position, type of injury, the amount of money they made while they were injured, and the number of games missed due to their injuries. I found this data online from two different websites and then created an excel sheet to organize the data and import it into R. This data interested me beacuse I love sports, and I was curious to see how a players rank and position could effect the amount of money they earned, the severity of injury, or what team they were on. Overall, the topics of sports and medicine seemed to work well together in these datasets which prompted me to use them for my project.</p>
+<h1>
+<p>Importing Datasets</p>
+<pre class="r"><code>library(tidyverse)
+library(plyr)
+playerrank &lt;- read.csv(&quot;~/Desktop/SDS 348/Project 1/Player Rank.csv&quot;)
+playerinjurydata &lt;- read.csv(&quot;~/Desktop/SDS 348/Project 1/Player injury data.csv&quot;)
+head(playerinjurydata)</code></pre>
+<pre><code>##       Player.Name Position  Injury Cash.Earned.While.Injured Games.Missed
+## 1      Lonzo Ball       PG   Thigh                   591,144            6
+## 2     Brook Lopez        C    Back                   341,610            3
+## 3       Pau Gasol        C    Foot                   420,210           15
+## 4  Reggie Jackson       PG    Back                 8,992,368           42
+## 5   Dirk Nowitzki                                                      NA
+## 6 DeMarre Carroll       SF Illness                 1,225,988           13</code></pre>
+<pre class="r"><code>head(playerrank)</code></pre>
+<pre><code>##   Player.Rank     Player.Name Team
+## 1         100      Lonzo Ball  LAL
+## 2          99     Brook Lopez  MIL
+## 3          98       Pau Gasol  POR
+## 4          97  Reggie Jackson  DET
+## 5          96   Dirk Nowitzki  DAL
+## 6          95 DeMarre Carroll  BKN</code></pre>
+<pre class="r"><code>nrow(playerinjurydata)</code></pre>
+<pre><code>## [1] 100</code></pre>
+<pre class="r"><code>nrow(playerrank)</code></pre>
+<pre><code>## [1] 100</code></pre>
+<pre class="r"><code>ncol(playerinjurydata)</code></pre>
+<pre><code>## [1] 5</code></pre>
+<pre class="r"><code>ncol(playerrank)</code></pre>
+<pre><code>## [1] 3</code></pre>
+<h4>
+This shows my two data sets sepreately, with their different rows and columns. Originally, there were 100 rows in each data set. The player injury data set had 5 columns and the player rank data set had 3 columns.
+<h1>
+<p>Joining/Merging</p>
+<pre class="r"><code>joinedplayerdata &lt;- full_join(playerinjurydata, playerrank, by = &quot;Player.Name&quot;)
+joinedplayerdata %&gt;% arrange(Player.Name)</code></pre>
+<pre><code>##        Player.Name Position   Injury Cash.Earned.While.Injured Games.Missed
+## 1     Aaron Gordon       PF     Knee                 1,571,136            7
+## 2       Al Horford        C     Knee                   790,960            3
+## 3  Al-Farouq Aminu       PF     Knee                 5,282,805           47
+## 4   Andre Drummond        C     Calf                 2,449,088            8
+## 5   Andre Iguodala       SF Personal                10,291,646           50
+## 6   Andrew Wiggins       SF     Back                 2,641,681            9
+## 7    Anthony Davis       PF     Knee                 2,449,088            8
+## 8      Ben Simmons       PG     Back                 1,008,502           11
+## 9    Blake Griffin       PF     Knee                18,954,964           47
+## 10    Bradley Beal       SG      Leg                 1,989,884            7
+## 11  Brandon Ingram       SF    Ankle                   985,152            8
+## 12     Brook Lopez        C     Back                   341,610            3
+## 13      Chris Paul       PG Personal                   217,551            1
+## 14     CJ McCollum       SG    Ankle                 1,556,890            4
+##    Player.Rank Team
+## 1           66  ORL
+## 2           16  BOS
+## 3           81  POR
+## 4           46  DET
+## 5           87  GSW
+## 6           74  MIN
+## 7            5  NOP
+## 8           26  PHI
+## 9           41  DET
+## 10          27  WAS
+## 11          75  LAL
+## 12          99  MIL
+## 13           8  HOU
+## 14          33  POR
+##  [ reached &#39;max&#39; / getOption(&quot;max.print&quot;) -- omitted 86 rows ]</code></pre>
+<pre class="r"><code>nrow(joinedplayerdata)</code></pre>
+<pre><code>## [1] 100</code></pre>
+<pre class="r"><code>ncol(joinedplayerdata)</code></pre>
+<pre><code>## [1] 7</code></pre>
+<h4>
+<p>I preformed a full join on my two datasets, joining them with their common variable, player name. Once joined, there were still 100 rows in the dataset but there are 7 columns. No data was dropped from this join because I simply brought two datasets together based off of their common variable,and both datasets had the same players. I chose this type of join because I wanted all of the data from the two sets to be present in the new dataset. When I joined my data, it was already tidied.</p>
+<pre class="r"><code>no.najoinedplayerdata &lt;- joinedplayerdata %&gt;% na.omit()
+nrow(joinedplayerdata) - nrow(no.najoinedplayerdata)</code></pre>
+<pre><code>## [1] 9</code></pre>
+<pre class="r"><code>anti_join(joinedplayerdata, no.najoinedplayerdata, by = &quot;Player.Name&quot;)</code></pre>
+<pre><code>##          Player.Name Position Injury Cash.Earned.While.Injured Games.Missed
+## 1      Dirk Nowitzki                                                     NA
+## 2       Kelly Olynyk                                                     NA
+## 3      Kent Bazemore                                                     NA
+## 4          PJ Tucker                                                     NA
+## 5      Tobias Harris                                                     NA
+## 6     Nikola Mirotic                                                     NA
+## 7 Harrison Mavericks                                                     NA
+## 8         Joe Ingles                                                     NA
+## 9       Nikola Jokic                                                     NA
+##   Player.Rank Team
+## 1          96  DAL
+## 2          93  MIA
+## 3          91  ATL
+## 4          85  HOU
+## 5          65  LAC
+## 6          60  NOP
+## 7          59  DAL
+## 8          56  UTA
+## 9          18  DEN</code></pre>
+<h4>
+<p>When I removed the NA’s from the data set, 9 rows were removed which means that the data for 9 players was omitted. The players that were removed from the dataset due to NA’s were Dirk Nowitzki, Kelly Olynyk, Kent Bazemore, PJ Tucker, Tobias Harris, Nikola Mirotic, Harrison Mavericks, Joe Ingles, and Nikola Jokic.The reason that these players were removed due to NA’s is because they did not have data in one of my datasets.</p>
+<h1>
+<p>Wrangling:Summary Statistics</p>
+<pre class="r"><code>joinedplayerdata %&gt;% filter(Player.Rank &lt; 10)</code></pre>
+<pre><code>##             Player.Name Position   Injury Cash.Earned.While.Injured
+## 1           Joel Embiid        C Shoulder                 6,526,506
+## 2            Chris Paul       PG Personal                   217,551
+## 3     Russell Westbrook       PG    Thumb                   435,102
+## 4 Giannis Antetokounmpo       SF Shoulder                    65,344
+## 5         Anthony Davis       PF     Knee                 2,449,088
+## 6          James Harden       SG    Thigh                 1,079,070
+## 7         Stephen Curry       PG  Illness                29,548,740
+## 8          Kevin Durant       SF     Heel                29,633,124
+## 9          LeBron James       SF    Groin                 1,480,556
+##   Games.Missed Player.Rank Team
+## 1           19           9  PHI
+## 2            1           8  HOU
+## 3            1           7  OKC
+## 4            4           6  MIL
+## 5            8           5  NOP
+## 6            3           4  HOU
+## 7           60           3  GSW
+## 8           64           2  GSW
+## 9            3           1  LAL</code></pre>
+<h4>
+<p>This filter shows me the top 10 ranked players in my data set. (From number 10 to number 1).</p>
+<pre class="r"><code>selected &lt;- joinedplayerdata %&gt;% select(Player.Name, Injury, 
+    Games.Missed)
+head(selected)</code></pre>
+<pre><code>##       Player.Name  Injury Games.Missed
+## 1      Lonzo Ball   Thigh            6
+## 2     Brook Lopez    Back            3
+## 3       Pau Gasol    Foot           15
+## 4  Reggie Jackson    Back           42
+## 5   Dirk Nowitzki                   NA
+## 6 DeMarre Carroll Illness           13</code></pre>
+<h4>
+<p>If I wanted to look at just a data set with the player names, their injuries, and the number of games they had to miss, I would use the select function above.</p>
+<pre class="r"><code>arrange1 &lt;- joinedplayerdata %&gt;% arrange(Games.Missed)
+head(arrange1)</code></pre>
+<pre><code>##        Player.Name Position   Injury Cash.Earned.While.Injured Games.Missed
+## 1  Dejounte Murray       PG     Calf                    26,234            1
+## 2  Dennis Schroder       PG    Ankle                   175,142            1
+## 3   Thaddeus Young       PF Personal                   145,762            1
+## 4    Dwight Howard        C  Illness                    28,980            1
+## 5 Robert Covington       SF Personal                   127,698            1
+## 6 Donovan Mitchell       SG  Illness                    41,082            1
+##   Player.Rank Team
+## 1          89  SAS
+## 2          80  OKC
+## 3          76  IND
+## 4          69  LAL
+## 5          48  PHI
+## 6          34  UTA</code></pre>
+<h4>
+<p>This function allowed for me to see which players missed the most games throughout their time of injury. It was arranged from the least amount of games missed to the most.</p>
+<pre class="r"><code>group1 &lt;- no.najoinedplayerdata %&gt;% group_by(Injury)
+summarizedinjury &lt;- group1 %&gt;% summarise(unique(Injury))
+head(summarizedinjury)</code></pre>
+<pre><code>##   unique(Injury)
+## 1          Thigh
+## 2           Back
+## 3           Foot
+## 4        Illness
+## 5       Shoulder
+## 6          Elbow</code></pre>
+<pre class="r"><code>nrow(summarizedinjury)</code></pre>
+<pre><code>## [1] 19</code></pre>
+<pre class="r"><code>summarizednona &lt;- summarizedinjury %&gt;% na.omit()</code></pre>
+<h4>
+<p>The group by function allowed for me to group the data based off of the types of injuries. Then, the summarize data showed me a table of all different injuries, and I was able to conclude that there are 19 unique injuries.</p>
+<pre class="r"><code>cashearned &lt;- joinedplayerdata$Cash.Earned.While.Injured
+nocommadata &lt;- joinedplayerdata %&gt;% mutate(CashEarned = str_replace_all(Cash.Earned.While.Injured, 
+    &quot;,&quot;, &quot;&quot;))</code></pre>
+<h4>
+<p>I ran into a problem with my data not being numeric with the commas, so I removed them from the data.</p>
+<pre class="r"><code>nocommadata</code></pre>
+<pre><code>##        Player.Name Position   Injury Cash.Earned.While.Injured Games.Missed
+## 1       Lonzo Ball       PG    Thigh                   591,144            6
+## 2      Brook Lopez        C     Back                   341,610            3
+## 3        Pau Gasol        C     Foot                   420,210           15
+## 4   Reggie Jackson       PG     Back                 8,992,368           42
+## 5    Dirk Nowitzki                                                       NA
+## 6  DeMarre Carroll       SF  Illness                 1,225,988           13
+## 7    Fred VanVleet       PG Shoulder                 1,742,499           16
+## 8     Kelly Olynyk                                                       NA
+## 9    Evan Fournier       SG    Elbow                   576,270            4
+## 10   Kent Bazemore                                                       NA
+## 11  Nikola Vucevic        C    Ankle                 3,480,224           11
+## 12 Dejounte Murray       PG     Calf                    26,234            1
+##    Player.Rank Team CashEarned
+## 1          100  LAL     591144
+## 2           99  MIL     341610
+## 3           98  POR     420210
+## 4           97  DET    8992368
+## 5           96  DAL           
+## 6           95  BKN    1225988
+## 7           94  TOR    1742499
+## 8           93  MIA           
+## 9           92  ORL     576270
+## 10          91  ATL           
+## 11          90  ORL    3480224
+## 12          89  SAS      26234
+##  [ reached &#39;max&#39; / getOption(&quot;max.print&quot;) -- omitted 88 rows ]</code></pre>
+<pre class="r"><code>nocommadata &lt;- nocommadata %&gt;% mutate(CashEarned = as.numeric(CashEarned))
+newfulldata &lt;- nocommadata %&gt;% mutate(CashEarnedPerGame = CashEarned/Games.Missed)</code></pre>
+<h4>
+<p>This mutation allowed for me to create a column that shows how much money each Player made per game they missed. This helped standardize the data a bit, because before, some players looked liked they made much more money, but that was only because they had been out for many games.</p>
+<pre class="r"><code>library(dplyr)
+detach(package:plyr)
+data2 &lt;- newfulldata %&gt;% na.omit() %&gt;% select(-Cash.Earned.While.Injured) %&gt;% 
+    glimpse()</code></pre>
+<pre><code>## Rows: 91
+## Columns: 8
+## $ Player.Name       &lt;chr&gt; &quot;Lonzo Ball&quot;, &quot;Brook Lopez&quot;, &quot;Pau Gasol&quot;, &quot;Reggie J…
+## $ Position          &lt;chr&gt; &quot;PG&quot;, &quot;C&quot;, &quot;C&quot;, &quot;PG&quot;, &quot;SF&quot;, &quot;PG&quot;, &quot;SG&quot;, &quot;C&quot;, &quot;PG&quot;, …
+## $ Injury            &lt;chr&gt; &quot;Thigh&quot;, &quot;Back&quot;, &quot;Foot&quot;, &quot;Back&quot;, &quot;Illness&quot;, &quot;Should…
+## $ Games.Missed      &lt;int&gt; 6, 3, 15, 42, 13, 16, 4, 11, 1, 6, 50, 9, 15, 2, 2,…
+## $ Player.Rank       &lt;int&gt; 100, 99, 98, 97, 95, 94, 92, 90, 89, 88, 87, 86, 84…
+## $ Team              &lt;chr&gt; &quot;LAL&quot;, &quot;MIL&quot;, &quot;POR&quot;, &quot;DET&quot;, &quot;BKN&quot;, &quot;TOR&quot;, &quot;ORL&quot;, &quot;O…
+## $ CashEarned        &lt;dbl&gt; 591144, 341610, 420210, 8992368, 1225988, 1742499, …
+## $ CashEarnedPerGame &lt;dbl&gt; 98524.00, 113870.00, 28014.00, 214104.00, 94306.77,…</code></pre>
+<pre class="r"><code>mean(data2$CashEarnedPerGame)</code></pre>
+<pre><code>## [1] 274583.7</code></pre>
+<pre class="r"><code>quantile(data2$CashEarnedPerGame)</code></pre>
+<pre><code>##        0%       25%       50%       75%      100% 
+##   16336.0  125130.8  224448.0  342429.9 2066133.5</code></pre>
+<pre class="r"><code>mean(data2$Games.Missed)</code></pre>
+<pre><code>## [1] 14.91209</code></pre>
+<pre class="r"><code>quantile(data2$Games.Missed)</code></pre>
+<pre><code>##   0%  25%  50%  75% 100% 
+##  1.0  3.5  8.0 18.0 66.0</code></pre>
+<pre class="r"><code>data2 %&gt;% group_by(Injury) %&gt;% summarise(mean_cashearnedpergame = mean(CashEarnedPerGame, 
+    na.rm = T), min_cashearnedpergame = min(CashEarnedPerGame, 
+    na.rm = T), max_cashearnedpergame = max(CashEarnedPerGame, 
+    na.rm = T))</code></pre>
+<pre><code>## # A tibble: 19 x 4
+##    Injury     mean_cashearnedpergame min_cashearnedpergame max_cashearnedpergame
+##    &lt;chr&gt;                       &lt;dbl&gt;                 &lt;dbl&gt;                 &lt;dbl&gt;
+##  1 Ankle                     206673.                47713.               389222.
+##  2 Back                      401254.                91682               1567230 
+##  3 Calf                      150919.                26234                306136 
+##  4 Concussion                114312                114312                114312 
+##  5 Elbow                     227869.               144068.               311670.
+##  6 Foot                      174271.                28014                344141.
+##  7 Forearm                   308306                308306                308306 
+##  8 Groin                     238995.                79856                493519.
+##  9 Hamstring                 366335.               342775.               389896 
+## 10 Heel                      347653.                93977.               513917.
+## 11 Illness                   282675.                28980                593220 
+## 12 Knee                      257759.                39882                462458.
+## 13 Leg                       214554.               144839.               284269.
+## 14 Neck                      340037.               288168.               391906.
+## 15 Personal                  415811.               127698               2066134.
+## 16 Shoulder                  220042.                16336                343500.
+## 17 Thigh                     229107                 98524                359690 
+## 18 Thumb                     435102                435102                435102 
+## 19 Wrist                     331143.               331143.               331143.</code></pre>
+<pre class="r"><code>data2 %&gt;% group_by(Position) %&gt;% summarise(mean_cashearnedpergame = mean(CashEarnedPerGame, 
+    na.rm = T), min_cashearnedpergame = min(CashEarnedPerGame, 
+    na.rm = T), max_cashearnedpergame = max(CashEarnedPerGame, 
+    na.rm = T))</code></pre>
+<pre><code>## # A tibble: 5 x 4
+##   Position mean_cashearnedpergame min_cashearnedpergame max_cashearnedpergame
+##   &lt;chr&gt;                     &lt;dbl&gt;                 &lt;dbl&gt;                 &lt;dbl&gt;
+## 1 C                       233291.                28014                593220 
+## 2 PF                      215980.                53395.               403297.
+## 3 PG                      261079.                26234                505800 
+## 4 SF                      242793.                16336                493519.
+## 5 SG                      425158.                41082               2066134.</code></pre>
+<pre class="r"><code>data2 %&gt;% group_by(Team) %&gt;% summarise(mean_rank = mean(Player.Rank), 
+    sd_rank = sd(Player.Rank))</code></pre>
+<pre><code>## # A tibble: 28 x 3
+##    Team  mean_rank sd_rank
+##    &lt;chr&gt;     &lt;dbl&gt;   &lt;dbl&gt;
+##  1 BKN        95      NA  
+##  2 BOS        37.7    24.9
+##  3 CHA        52.5    29.0
+##  4 CHI        84      NA  
+##  5 CLE        31      NA  
+##  6 DAL        43      NA  
+##  7 DEN        51.5    14.4
+##  8 DET        61.3    31.0
+##  9 GSW        32.5    36.1
+## 10 HOU        24      21.6
+## # … with 18 more rows</code></pre>
+<pre class="r"><code>data2 %&gt;% group_by(Team) %&gt;% summarise(mean_cash = mean(CashEarnedPerGame))</code></pre>
+<pre><code>## # A tibble: 28 x 2
+##    Team  mean_cash
+##    &lt;chr&gt;     &lt;dbl&gt;
+##  1 BKN      94307.
+##  2 BOS     252196.
+##  3 CHA     356026.
+##  4 CHI      79856 
+##  5 CLE     513917.
+##  6 DAL     111656 
+##  7 DEN     672334.
+##  8 DET     307846.
+##  9 GSW     302123.
+## 10 HOU     237950.
+## # … with 18 more rows</code></pre>
+<pre class="r"><code>data2 %&gt;% summarise(n_distinct(Position))</code></pre>
+<pre><code>##   n_distinct(Position)
+## 1                    5</code></pre>
+<pre class="r"><code>data2 %&gt;% group_by(Team) %&gt;% summarise(max_cash = max(CashEarnedPerGame))</code></pre>
+<pre><code>## # A tibble: 28 x 2
+##    Team  max_cash
+##    &lt;chr&gt;    &lt;dbl&gt;
+##  1 BKN     94307.
+##  2 BOS    505800 
+##  3 CHA    369966 
+##  4 CHI     79856 
+##  5 CLE    513917.
+##  6 DAL    111656 
+##  7 DEN   2066134.
+##  8 DET    403297.
+##  9 GSW    492479 
+## 10 HOU    359690 
+## # … with 18 more rows</code></pre>
+<pre class="r"><code>data2 %&gt;% group_by(Team, Injury) %&gt;% summarize(mean_missed = mean(Games.Missed))</code></pre>
+<pre><code>## # A tibble: 81 x 3
+## # Groups:   Team [28]
+##    Team  Injury   mean_missed
+##    &lt;chr&gt; &lt;chr&gt;          &lt;dbl&gt;
+##  1 BKN   Illness         13  
+##  2 BOS   Calf            14  
+##  3 BOS   Illness          3.5
+##  4 BOS   Knee            11  
+##  5 BOS   Personal         1  
+##  6 CHA   Illness         19  
+##  7 CHA   Knee            13  
+##  8 CHI   Groin           15  
+##  9 CLE   Heel             7  
+## 10 DAL   Ankle            8  
+## # … with 71 more rows</code></pre>
+<pre class="r"><code>data2 %&gt;% group_by(Team, Injury) %&gt;% summarize(mean_missed = mean(Games.Missed)) %&gt;% 
+    pivot_wider(names_from = Injury, values_from = mean_missed)</code></pre>
+<pre><code>## # A tibble: 28 x 20
+## # Groups:   Team [28]
+##    Team  Illness  Calf  Knee Personal Groin  Heel Ankle  Back Thigh Hamstring
+##    &lt;chr&gt;   &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;    &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;     &lt;dbl&gt;
+##  1 BKN      13      NA    NA       NA    NA    NA  NA      NA    NA        NA
+##  2 BOS       3.5    14    11        1    NA    NA  NA      NA    NA        NA
+##  3 CHA      19      NA    13       NA    NA    NA  NA      NA    NA        NA
+##  4 CHI      NA      NA    NA       NA    15    NA  NA      NA    NA        NA
+##  5 CLE      NA      NA    NA       NA    NA     7  NA      NA    NA        NA
+##  6 DAL      NA      NA    NA       NA    NA    NA   8      NA    NA        NA
+##  7 DEN      NA      NA     6        2    NA    NA  15.5    NA    NA        NA
+##  8 DET      NA       8    47       NA    NA    NA  NA      42    NA        NA
+##  9 GSW      60      NA    46       50    NA    64  NA      NA    NA        NA
+## 10 HOU      NA      NA    30        1    NA    25  NA      NA     3        NA
+## # … with 18 more rows, and 9 more variables: Concussion &lt;dbl&gt;, Neck &lt;dbl&gt;,
+## #   Shoulder &lt;dbl&gt;, Wrist &lt;dbl&gt;, Elbow &lt;dbl&gt;, Thumb &lt;dbl&gt;, Forearm &lt;dbl&gt;,
+## #   Foot &lt;dbl&gt;, Leg &lt;dbl&gt;</code></pre>
+<h4>
+<p>To begin, I looked at the mean and quantile spread of both the amount of money earned per game and the number of games missed. Then, I looked at the mean,minimum, and maximum amount of money made per game that a player missed, grouped by the type of injury. Then, I looked at the same data but grouped by the players position. Next, I looked at the mean player rank and standard deviation of players based off of the team they are on. The team with the best players on average was HOU. I then looked at the mean cash earned per team. I was interested in knowing the maximum amount of money a player made during a missed game based off of the team they were on.The maximum was made by SAS. I grouped the data by both team and the type of injury, and looked at the mean number of games missed by the players. Then, I untidied the data and made the table much wider by creating new columns for each individual injury.</p>
+<h1>
+<p>Visualizing</p>
+<pre class="r"><code>library(dplyr)
+library(ggplot2)
+library(tibble)
+library(reshape2)
+numericdata &lt;- select_if(newfulldata, is.numeric)
+no.nanumeric &lt;- numericdata %&gt;% na.omit
+cor(no.nanumeric)</code></pre>
+<pre><code>##                   Games.Missed Player.Rank CashEarned CashEarnedPerGame
+## Games.Missed        1.00000000  -0.1034918  0.8572082        0.02085507
+## Player.Rank        -0.10349180   1.0000000 -0.3045144       -0.30728053
+## CashEarned          0.85720821  -0.3045144  1.0000000        0.23736534
+## CashEarnedPerGame   0.02085507  -0.3072805  0.2373653        1.00000000</code></pre>
+<pre class="r"><code>cor(no.nanumeric) %&gt;% as.data.frame %&gt;% rownames_to_column %&gt;% 
+    pivot_longer(-1) %&gt;% ggplot(aes(rowname, name, fill = value)) + 
+    geom_tile() + geom_text(aes(label = round(value, 2))) + scale_fill_gradient2(low = &quot;red&quot;, 
+    mid = &quot;white&quot;, high = &quot;blue&quot;)</code></pre>
+<img src="/project/project1_files/figure-html/unnamed-chunk-11-1.png" width="672" style="display: block; margin: auto;" />
+<h4>
+<p>This heatmap shows the different correlations between my four numeric variables. The highest (positive) correlation is between the number of games missed and the amount of money earned. This makes sense, because the more games that were missed, the more money the players made while they were out. The most negative correlation is between the players rank and the amount of money they made per game. This also makes sense because the lower a player is ranked numerically (top players), they more they make per game.</p>
+<pre class="r"><code>ggplot(data = newfulldata, aes(x = Player.Rank, y = CashEarned)) + 
+    geom_point(aes(color = Team)) + scale_fill_gradient() + ggtitle(&quot;Money Earned and Player Rank&quot;) + 
+    theme_dark() + geom_bar(stat = &quot;summary&quot;)</code></pre>
+<img src="/project/project1_files/figure-html/unnamed-chunk-12-1.png" width="672" style="display: block; margin: auto;" />
+<h4>
+<p>This plot is another way of showing the correlation between the amount of money earned and the players rank. Although most players make around the same amount of money per game that they miss, the top players (lowest player rank) make slightly more money. The data is colored based off of the team that each player is on.</p>
+<pre class="r"><code>ggplot(data = no.najoinedplayerdata, aes(x = Games.Missed, y = Position)) + 
+    geom_point(aes(color = Position)) + scale_fill_gradient() + 
+    ggtitle(&quot;Effect of Injury and Position on Number of Games Missed&quot;) + 
+    facet_wrap(~Injury) + scale_x_continuous(breaks = seq(0, 
+    60, 10)) + theme_light()</code></pre>
+<p><img src="/project/project1_files/figure-html/unnamed-chunk-13-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggplot(data = no.najoinedplayerdata, aes(x = Games.Missed, y = Injury)) + 
+    geom_point(aes(color = Injury)) + scale_fill_gradient() + 
+    ggtitle(&quot;Effect of Injury and Position on Number of Games Missed&quot;) + 
+    facet_wrap(~Position) + scale_x_continuous(breaks = seq(0, 
+    60, 10)) + theme_light()</code></pre>
+<img src="/project/project1_files/figure-html/unnamed-chunk-13-2.png" width="672" style="display: block; margin: auto;" />
+<h4>
+<p>These graphs are seperated based off of the position a player plays at. Then, we can see how many games were missed due to which type of Injury. From these graphs, I can see that leg, knee, and heel injuries tend to put players out for the longest amount of time. There are more hand injuries in the post guard position, and about equal numbners of leg injuries thoughout all of the different positions.</p>
+<h1>
+<p>Dimensionality Reduction</p>
+<pre class="r"><code>library(cluster)
+pam1 &lt;- no.nanumeric %&gt;% pam(k = 4)
+pam1</code></pre>
+<pre><code>## Medoids:
+##    ID Games.Missed Player.Rank CashEarned CashEarnedPerGame
+## 9   7            4          92     576270          144067.5
+## 82 74           27          19    8940874          331143.5
+## 72 64            9          29    2805027          311669.7
+## 99 90           64           2   29633124          463017.6
+## Clustering vector:
+##   1   2   3   4   6   7   9  11  12  13  14  15  17  18  19  20  21  22  23  24 
+##   1   1   1   2   1   3   1   3   1   1   2   1   1   1   1   3   1   1   3   1 
+##  25  26  27  28  29  30  31  32  33  34  35  37  38  39  40  43  44  46  47  48 
+##   1   1   3   2   1   3   1   1   3   2   1   2   1   1   1   1   1   1   1   1 
+##  49  50  51  52  53  54  55  56  57  58  59  60  61  62  63  64  65  66  67  68 
+##   3   1   1   3   1   1   3   3   3   1   2   2   2   1   3   2   2   3   1   1 
+##  69  70  71  72  73  74  75  76  77  78  79  80  81  82  84  85  86  87  88  89 
+##   3   3   1   3   3   3   1   2   4   3   4   3   2   2   1   1   3   1   3   3 
+##  90  91  92  93  94  95  96  97  98  99 100 
+##   2   3   2   1   1   1   3   1   4   4   1 
+## Objective function:
+##     build      swap 
+## 1070089.5  984167.3 
+## 
+## Available components:
+##  [1] &quot;medoids&quot;    &quot;id.med&quot;     &quot;clustering&quot; &quot;objective&quot;  &quot;isolation&quot; 
+##  [6] &quot;clusinfo&quot;   &quot;silinfo&quot;    &quot;diss&quot;       &quot;call&quot;       &quot;data&quot;</code></pre>
+<pre class="r"><code>pamclust &lt;- no.nanumeric %&gt;% mutate(cluster = as.factor(pam1$clustering))
+pamclust %&gt;% ggplot(aes(Games.Missed, Player.Rank, CashEarned, 
+    CashEarnedPerGame, color = cluster)) + geom_point()</code></pre>
+<p><img src="/project/project1_files/figure-html/unnamed-chunk-14-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>library(tidyverse)
+head(no.nanumeric)</code></pre>
+<pre><code>##   Games.Missed Player.Rank CashEarned CashEarnedPerGame
+## 1            6         100     591144          98524.00
+## 2            3          99     341610         113870.00
+## 3           15          98     420210          28014.00
+## 4           42          97    8992368         214104.00
+## 6           13          95    1225988          94306.77
+## 7           16          94    1742499         108906.19</code></pre>
+<pre class="r"><code>newdat &lt;- no.nanumeric %&gt;% scale()
+cov(newdat) %&gt;% round(2)</code></pre>
+<pre><code>##                   Games.Missed Player.Rank CashEarned CashEarnedPerGame
+## Games.Missed              1.00       -0.10       0.86              0.02
+## Player.Rank              -0.10        1.00      -0.30             -0.31
+## CashEarned                0.86       -0.30       1.00              0.24
+## CashEarnedPerGame         0.02       -0.31       0.24              1.00</code></pre>
+<pre class="r"><code># PCA
+new_pca &lt;- princomp(newdat)
+summary(new_pca, loadings = T)</code></pre>
+<pre><code>## Importance of components:
+##                           Comp.1    Comp.2    Comp.3     Comp.4
+## Standard deviation     1.4140919 1.0832945 0.8243250 0.32148028
+## Proportion of Variance 0.5054686 0.2966415 0.1717654 0.02612447
+## Cumulative Proportion  0.5054686 0.8021101 0.9738755 1.00000000
+## 
+## Loadings:
+##                   Comp.1 Comp.2 Comp.3 Comp.4
+## Games.Missed       0.602  0.430         0.671
+## Player.Rank       -0.342  0.576  0.733 -0.121
+## CashEarned         0.669  0.179        -0.719
+## CashEarnedPerGame  0.271 -0.672  0.676  0.133</code></pre>
+<pre class="r"><code># varience by each PC
+eigval &lt;- new_pca$sdev^2
+# cumulative varience
+varprop = round(eigval/sum(eigval), 2)
+
+
+ggplot() + geom_bar(aes(y = varprop, x = 1:4), stat = &quot;identity&quot;) + 
+    xlab(&quot;&quot;) + geom_path(aes(y = varprop, x = 1:4)) + geom_text(aes(x = 1:4, 
+    y = varprop, label = round(varprop, 2)), vjust = 1, col = &quot;white&quot;, 
+    size = 4) + scale_y_continuous(breaks = seq(0, 0.6, 0.2), 
+    labels = scales::percent) + scale_x_continuous(breaks = 1:4)</code></pre>
+<p><img src="/project/project1_files/figure-html/unnamed-chunk-15-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>datadf &lt;- data.frame(PC1 = new_pca$scores[, 1], PC2 = new_pca$scores[, 
+    2])
+ggplot(datadf, aes(PC1, PC2)) + geom_point()</code></pre>
+<p><img src="/project/project1_files/figure-html/unnamed-chunk-16-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>eigval</code></pre>
+<pre><code>##    Comp.1    Comp.2    Comp.3    Comp.4 
+## 1.9996558 1.1735269 0.6795116 0.1033496</code></pre>
+<pre class="r"><code>summary(new_pca, loadings = T)</code></pre>
+<pre><code>## Importance of components:
+##                           Comp.1    Comp.2    Comp.3     Comp.4
+## Standard deviation     1.4140919 1.0832945 0.8243250 0.32148028
+## Proportion of Variance 0.5054686 0.2966415 0.1717654 0.02612447
+## Cumulative Proportion  0.5054686 0.8021101 0.9738755 1.00000000
+## 
+## Loadings:
+##                   Comp.1 Comp.2 Comp.3 Comp.4
+## Games.Missed       0.602  0.430         0.671
+## Player.Rank       -0.342  0.576  0.733 -0.121
+## CashEarned         0.669  0.179        -0.719
+## CashEarnedPerGame  0.271 -0.672  0.676  0.133</code></pre>
+<pre class="r"><code># highest scores on PC1
+Name &lt;- rownames(newdat)
+new_pca$scores %&gt;% as.data.frame %&gt;% cbind(Name, .) %&gt;% top_n(3, 
+    Comp.1) %&gt;% select(Name:Comp.4)</code></pre>
+<pre><code>##    Name   Comp.1    Comp.2     Comp.3     Comp.4
+## 77   77 4.916668 0.9622934  0.2371041 -0.8065352
+## 98   98 4.951855 0.3771337 -0.2739907 -0.7675392
+## 99   99 5.082609 0.5316075 -0.3592315 -0.6316262</code></pre>
+<pre class="r"><code># lowest scores on PC1
+new_pca$scores %&gt;% as.data.frame %&gt;% cbind(Name, .) %&gt;% top_n(3, 
+    wt = desc(Comp.1)) %&gt;% select(Name:Comp.4)</code></pre>
+<pre><code>##    Name    Comp.1    Comp.2    Comp.3     Comp.4
+## 1     1 -1.466205 1.1372591 0.8116131 -0.2480373
+## 2     2 -1.569495 0.9979228 0.8128396 -0.3252159
+## 12   12 -1.640190 0.9555781 0.3327461 -0.3687222</code></pre>
+<pre class="r"><code># highest scores on PC2
+new_pca$scores %&gt;% as.data.frame %&gt;% cbind(Name, .) %&gt;% top_n(3, 
+    wt = Comp.2) %&gt;% select(Name:Comp.4)</code></pre>
+<pre><code>##    Name    Comp.1   Comp.2    Comp.3    Comp.4
+## 4     4 0.8076511 1.921552 1.2022629 0.2866461
+## 14   14 1.3311578 1.977375 0.9631629 0.4911836
+## 37   37 2.0249985 2.046236 0.2716280 1.2613740</code></pre>
+<pre class="r"><code># lowest scores on PC2
+new_pca$scores %&gt;% as.data.frame %&gt;% cbind(Name, .) %&gt;% top_n(3, 
+    wt = desc(Comp.2)) %&gt;% select(Name:Comp.4)</code></pre>
+<pre><code>##     Name     Comp.1    Comp.2     Comp.3    Comp.4
+## 57    57 1.37507044 -4.828036  4.2809146 0.3999050
+## 71    71 0.74612740 -3.974867  2.6648921 0.4611179
+## 100  100 0.08608827 -1.862161 -0.7273805 0.1455376</code></pre>
+<pre class="r"><code>new_pca$loadings[1:4, 1:4] %&gt;% as.data.frame %&gt;% rownames_to_column %&gt;% 
+    ggplot() + geom_hline(aes(yintercept = 0), lty = 2) + geom_vline(aes(xintercept = 0), 
+    lty = 2) + ylab(&quot;PC2&quot;) + xlab(&quot;PC1&quot;) + geom_segment(aes(x = 0, 
+    y = 0, xend = Comp.1, yend = Comp.2), arrow = arrow(), col = &quot;red&quot;) + 
+    geom_label(aes(x = Comp.1 * 0.9, y = Comp.2 + 0.1, label = rowname))</code></pre>
+<p><img src="/project/project1_files/figure-html/unnamed-chunk-20-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>library(factoextra)
+fviz_pca_biplot(new_pca) + coord_fixed()</code></pre>
+<p><img src="/project/project1_files/figure-html/unnamed-chunk-21-1.png" width="672" style="display: block; margin: auto;" /></p>
+<h4>
+<p>This dimensionality assessment allowed for me to clearly see the connection between the different numeric variables in my dataset.First, I used PAM to create a cluster map of my data. However, the cluster graph did not come out as clearly as I would have hoped, so I decided to run a PCA analysis. I made a scree plot to see how many PC’s to keep and decided on two. Then I plotted the to PC scores. After that, I looked at the extremes of the PC data. Next, I plotted the loadings to show correlations between the different data vectors. There is a strong correlation between the number of games missed and the overall cash earned which would be expected. Lastly, I combined the PC score plot and the loading plot to finalize the analysis.</p>
+
+            
+        <hr>         <div class="related-posts">
+                <h5>Related Posts</h5>
+                
+              </div> 
+            </div>
+          </div>
+
+   <hr>  <div class="disqus">
+  <div id="disqus_thread"></div>
+  <script type="text/javascript">
+
+    (function() {
+      
+      
+      if (window.location.hostname == "localhost")
+        return;
+
+      var disqus_shortname = '';
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+  </script>
+  <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  <a href="http://disqus.com/" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+</div> 
+        </div>
+      </div>
+    </div>
+
+    
+    <footer>
+  <div id="footer">
+    <div class="container">
+      <p class="text-muted">&copy; All rights reserved. Powered by <a href="https://gohugo.io/">Hugo</a> and
+      <a href="http://www.github.com/nurlansu/hugo-sustain/">sustain</a> with ♥</p>
+    </div>
+  </div>
+</footer>
+<div class="footer"></div>
+
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+<script src="/js/docs.min.js"></script>
+<script src="/js/main.js"></script>
+
+<script src="/js/ie10-viewport-bug-workaround.js"></script>
+
+
+    
+  </body>
+</html>

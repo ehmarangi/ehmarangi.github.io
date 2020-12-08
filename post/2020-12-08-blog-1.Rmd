@@ -1,0 +1,21 @@
+---
+title: Blog 1
+author: ''
+date: '2020-12-08'
+slug: blog-1
+categories: []
+tags: []
+description: ''
+---
+````{r}
+library(reticulate)
+test<-"Merry"
+test
+````
+
+````{python}
+test="Christmas"
+print(test)
+````
+
+When using R and python, the two can preform the same functions, but the syntax is different. 

@@ -1,0 +1,249 @@
+---
+title: 'Project 2'
+author: "Erika Marangi"
+date: 'November 22,2020'
+output:
+  html_document:
+    toc: yes
+    toc_float:
+      collapsed: no
+      smooth_scroll: yes
+  pdf_document:
+    toc: no
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, eval = TRUE, fig.align = "center", warning = F, message = F,
+tidy=TRUE, tidy.opts=list(width.cutoff=60), R.options=list(max.print=100))
+```
+<h1>Introduction Paragraph<h1>
+<h4>For my project 2, I decided to use the combined data from my first project to look at the correlation between different variables a little more closely. My data is about different professional basketball players, their rank, their team, the position they play, their injuries, how many games they missed due to their injuries, and how much money they made per game they missed. My data has 8 variables and 91 observations for each variable.
+
+<h1>Part 1: MANOVA
+````{r}
+class_diag <- function(probs,truth){
+  #CONFUSION MATRIX: CALCULATE ACCURACY, TPR, TNR, PPV
+  tab<-table(factor(probs>.5,levels=c("FALSE","TRUE")),truth)
+  acc=sum(diag(tab))/sum(tab)
+  sens=tab[2,2]/colSums(tab)[2]
+  spec=tab[1,1]/colSums(tab)[1]
+  ppv=tab[2,2]/rowSums(tab)[2]
+  f1=2*(sens*ppv)/(sens+ppv)
+
+  if(is.numeric(truth)==FALSE & is.logical(truth)==FALSE) truth<-as.numeric(truth)-1
+  
+  #CALCULATE EXACT AUC
+  ord<-order(probs, decreasing=TRUE)
+  probs <- probs[ord]; truth <- truth[ord]
+  
+  TPR=cumsum(truth)/max(1,sum(truth)) 
+  FPR=cumsum(!truth)/max(1,sum(!truth))
+  
+  dup<-c(probs[-1]>=probs[-length(probs)], FALSE)
+  TPR<-c(0,TPR[!dup],1); FPR<-c(0,FPR[!dup],1)
+  n <- length(TPR)
+  auc<- sum( ((TPR[-1]+TPR[-n])/2) * (FPR[-1]-FPR[-n]) )
+
+  data.frame(acc,sens,spec,ppv,f1,auc)
+}
+
+library(tidyverse)
+finaldataproject2 <- read.csv("project2data.csv")
+finaldataproject2<-na.omit(finaldataproject2)
+finaldataproject2<-finaldataproject2%>%select(-Player.Rank)
+man1<-manova(cbind(Games.Missed,Cash.Earned.Per.Game,Player.Rank.1)~Injury, data=finaldataproject2)
+summary(man1)
+summary.aov(man1)
+````
+<h4> The summary from my MANOVA test gave me a Pillai value of 0.51328, an F value of 0.82563, and a P-value of  0.7962. Because the P-value is greater than .05, I can not  reject the null hypothesis that declares that the  number of games missed, the cash earned for each missed game, and the players rank have a mean difference based on which Injury a player endured. If the p-value had been less than .05 and was significant, I would then run a univariate ANOVA and post-Hoc t-tests to see which individual variables are significant and their influence on the type of injury.
+
+<h1>Part 2: Randomization Test
+````{r}
+library(vegan)
+dists<-finaldataproject2%>%select(Cash.Earned.Per.Game)%>%dist
+adonis(dists~Injury,data = finaldataproject2)
+
+finaldataproject2%>%group_by(Injury)%>%summarize(means=mean(Cash.Earned.Per.Game))%>%summarize(mean_diff=diff(means))
+randdist<-vector()
+for (i in 1:5000) {
+  new<-data.frame(CashEarned=sample(finaldataproject2$Cash.Earned.Per.Game),Injury=finaldataproject2$Injury)
+  randdist[i]<-mean(new[new$Injury==c("Foot","Thigh","Ankle"),]$CashEarned)-mean(new[new$Injury==c("Elbow","Wrist","Shoulder"),]$CashEarned)
+}
+{hist(randdist,main = "",ylab = "")}
+````
+<h4>For my randomization test (PERMANOVA), I first calculated the euclidean distances between all of the different player rankings and cash earned per game. Then, I ran this through the adonis function for the distance matrix. The R2 statistic is important because it explains what percent of the variation in distances is explained by the group being tested. The null hypothesis states that there is no variation in distance between the variables. This null hypothesis is not rejected because the p-value is much larger than .05 ( 0.923). Then, I found the mean-diffs for my data looking at Injury and Cash Earned, and graphed the distribution.The graph is centered without any extreme skew. 
+
+<H1> Part 3: Linear Regression
+````{r}
+scaled<-finaldataproject2%>%mutate(PerGameScaled=scale(Cash.Earned.Per.Game))
+scaled<-scaled%>%mutate(MissedScaled=scale(Games.Missed))
+scaled<-scaled%>%mutate(PlayerScale=scale(Player.Rank.1))
+scalefit<-lm(PerGameScaled~PlayerScale+MissedScaled,data = scaled)
+fit<-lm(Cash.Earned.Per.Game~Player.Rank.1+Games.Missed, data = finaldataproject2)
+summary(fit)
+summary(scalefit)
+````
+<h4> I ran a linear regression looking at how the Player's rank and the number of games missed effect the amount of money earned per game. If a player was ranked (0), and missed (0) games,they would make a predicted 419174.10 per game they missed. For each increase in player rank (meaning a "lower" rank) they would make 2918.6 less when the number of games missed is held constant. If the number of games missed increases by one, then the amount of money earned will decrease by 174.9 when player rank is held constant. I also ran the same regression with the numeric variables scaled, and go the same significant variable, "player rank."
+
+````{r}
+library(lmtest)
+library(ggplot2)
+library(sandwich)
+fit2<-lm(Cash.Earned.Per.Game~Player.Rank.1*Games.Missed, data = finaldataproject2)
+summary(fit2)
+ggplot(finaldataproject2,aes(x=Player.Rank.1,y=Games.Missed))+geom_point(aes(color=Cash.Earned.Per.Game))+geom_smooth(method = "lm",formula = y~1,se=F,fullrange=T, aes(color=Cash.Earned.Per.Game))
+bptest(fit2)
+summary(fit2)$coef[,1:2]
+coeftest(fit2, vcov=vcovHC(fit2))[,1:2]
+resids<-fit2$residuals
+ks.test(resids, "pnorm",mean=0, sd(resids))
+shapiro.test(resids)
+````
+<h4> There is not a lot of fanning on the scatterplot so I can not tell if there is a standard error from looking at that. I ran a Breusch-Pagan test to test for homoskedasticity. The null hypothesis states that homoskedasticity is present, and because the p-value is 0.6334, we fail to reject the null hypothesis. I then ran a test for the uncorrected standard error, and another for the corrected standard errors.After the correction , the standard errors for each of my predictor variables decreased. When I tested the normality of my data, the p-value was less than .05, so I reject the null hypothesis that the true distribution of the data is normal. From the summary of my linear regression, I see that the R-squared value is  0.09616, which is the proportion of variation in the response variable (Cash Earned per Game) explained by the overall model.  
+
+<H1>Part 4: Bootstrapping
+````{r}
+library(dplyr)
+library(tidyr)
+fit3<-lm(Cash.Earned.Per.Game~Player.Rank.1*Games.Missed, data = finaldataproject2)
+summary(fit3)
+boot_dat<-sample_frac(finaldataproject2,replace = T)
+samp_distn<-replicate(5000,{
+  boot_dat<-sample_frac(finaldataproject2,replace = T)
+  fitnew<-lm(Cash.Earned.Per.Game~Player.Rank.1*Games.Missed,data = boot_dat)
+  coef(fitnew)
+})
+samp_distn%>%t%>%as.data.frame%>%summarize_all(sd)
+samp_distn%>%t%>%as.data.frame%>%pivot_longer(1:3)%>%group_by(name)%>%summarize(lower=quantile(value,.025),upper=quantile(value,.975))
+````
+
+<h4> To bootstrap my data, I sampled my data with replacement and calculated the coefficient estimates for my new bootstrapped sample. The standard deviations of these estimates are my new standard error. The standard error for player rank was 854.363, for games missed 2029.967, and for the interaction the error was 27.19456. Because the standard error for the bootstrapped data is so high, it means that my data is not normalized and irregular. I also calculated the 95% confidence interval of my predictor variables. 
+````{r}
+fit4<-lm(Cash.Earned.Per.Game~Games.Missed*Player.Rank.1, data = finaldataproject2)
+resids<-fit4$residuals
+fitted<-fit4$fitted.values
+residsamp<-replicate(5000,{
+  newresids<-sample(resids,replace = TRUE)
+  finaldataproject2$new_y<-fitted+newresids
+  fit4<-lm(new_y~Games.Missed*Player.Rank.1,data = finaldataproject2)
+  coef(fit4)
+})
+residsamp%>%t%>%as.data.frame%>%summarize_all(sd)
+````
+<h4>I also calculated the bootstrap residuals for my data which resulted in larger estimates for most of the variables.
+
+<h1> Part 5: Binary Regression
+````{r}
+newdata<-finaldataproject2%>%mutate(Player.Rank.1=case_when(Player.Rank.1<=50~"Top",Player.Rank.1<=100~"Bottom"))
+newdata<-newdata%>%data.frame(RankBottom=ifelse(newdata$Player.Rank.1=="Bottom",1,0),RankTop=ifelse(newdata$Player.Rank.1=="Top",1,0) )
+fitnew<-glm(RankTop~Games.Missed+Cash.Earned.Per.Game,data = newdata,family=binomial(link = "logit"))
+coeftest(fitnew)
+````
+<h4>First, I created a binary variable from my player rankings. The top players are the top half and the bottom players are the bottom half rank. Then, I ran a regression looking at how the number of games missed and the cash earned per game can predict which level of rank a player is at. By looking at the regression, both the number of games missed and the amount of cash earned increase the odds of a player being ranked in the top bracket, yet only the amount of cash earned is significant. The log odds of being ranked in the top is -1.5204 and the odds of this is 0.2186244. For each game missed, the log odds of being ranked a top player are -1.5204+7.7699e-03 or -1.51263 and the odds are 0.2203297. For each increase in amount of cash earned the log odds of being ranked a top player are -1.5204+2.9107e-06 or -1.520397, and the odds are 0.2186251.
+````{r}
+library(plotROC)
+probs<-predict(fitnew,type = "response")
+table(predict=as.numeric(probs>.5),truth=newdata$RankTop)%>%addmargins()
+ROC<-ggplot(newdata)+geom_roc(aes(d=RankTop, m=probs),n.cuts = 0)
+ROC
+calc_auc(ROC)
+newdata$logit<-predict(fitnew,type = "link")
+newdata%>%ggplot(aes(logit,color=Player.Rank.1,fill=Player.Rank.1))+geom_density(alpha=.4)+theme(legend.position = c(.85,.85))+geom_vline(xintercept = 0)+xlab("predictor (logit)")
+````
+<h4> After calculating the confusion matrix for this data, I found that the sensitivity or true positive rate was 0.1875 and the specificity or true negative rate was 0.9322. The precision for my regression was 0.6. After creating an ROC curve and calculating the AUC, I can conclude that the AUC (0.7868114) is considered "fair." Next, I made a density plot of the log odds and grouped it by the outcome variable (top or bottom rank of players).  
+
+<h1> Part 6: Final Regression
+````{r}
+library(plotROC)
+library(glmnet)
+library(lmtest)
+finalfit<-glm(RankTop~Position+Injury+Games.Missed+Cash.Earned+Team+Cash.Earned.Per.Game,data=newdata,family=binomial(link = "logit"))
+coeftest(finalfit)
+probs<-predict(finalfit,type = "response")
+table(predict=as.numeric(probs>.5),truth=newdata$RankTop)%>%addmargins()
+ROC2<-ggplot(newdata)+geom_roc(aes(d=RankTop, m=probs),n.cuts = 0)
+ROC2
+calc_auc(ROC2)
+````
+<h4> Finally, I ran a regression to see how all of my variables can influence if a player is ranked as a top or bottom tier player. I was surprised to see that when the regression was run with all of my predictor variables, the accuracy, sensitivity, and specificity were all 100%. This is likely due to the fact that there are so many predictors for my output variable. This is also shown in the ROC plot and by the AUC which is a "perfect" 1. 
+````{r}
+k=10
+data<-newdata[sample(nrow(newdata)),]
+folds<-cut(seq(1:nrow(newdata)),breaks = k, labels = F)
+diags<-NULL
+for (i in 1:k) {
+  train<-data[folds!=i,]
+  test<-data[folds==i,]
+   fitnew$xlevels[["Injury"]]<-union(fitnew$xlevels[["Injury"]],levels(test$Injury))
+  fitnew$xlevels[["Team"]]<-union(fitnew$xlevels[["Team"]],levels(test$Team))
+  truth<-test$RankTop
+  fitnew<-glm(RankTop~Position+Games.Missed+Cash.Earned+Cash.Earned.Per.Game,data=train,family=binomial(link = "logit"))
+  probs<-predict(fitnew,newdata = test,type = "response")
+  diags<-rbind(diags,class_diag(probs,truth))
+}
+summarize_all(diags,mean)
+
+````
+<h4> From the 10 fold CV, i can see that the accuracy, specificity, sensitivity, and AUC all decreased from the previous test. The Accuracy is now 0.6711111, the sensitivity is 0.6647619, the specificity is 0.735, and the AUC went from a "perfect" 1 to a "fair" 0.7861111.
+
+````{r}
+library(glmnet)
+data.response<-as.matrix(newdata$RankTop)
+data.preds<-model.matrix(RankTop~Position+Injury+Games.Missed+Cash.Earned+Team+Cash.Earned.Per.Game,data = newdata)[,-1]
+cv<-cv.glmnet(data.preds,data.response,family="binomial")
+{plot(cv$glmnet.fit,"lambda",label = TRUE);abline(v=log(cv$lambda.min));abline(v=log(cv$lambda.min),lty=2)}
+cv<-cv.glmnet(data.preds,data.response,family="binomial")
+lassofit<-glmnet(data.preds,data.response,family = "binomial",lambda = cv$lambda.min)
+coef(lassofit)
+lassoprob<-predict(lassofit,data.preds,type = "response")
+class_diag(lassoprob,newdata$RankTop)
+````
+<h4> I ran a LASSO on the same variables as before and used Lambda min because that gave me the best results. The non-zero elements for predicting a player's rank are PositionPF, Cash.Earned, TeamHOU, TeamORL, and Cash.Earned.Per.Game. The AUC went from being 1 to 0.8012634, which makes more sense and suggests over fitting. The sensitivity is now 0.8367347, the specificity is 0.7142857, and the accuracy is 0.7735849, which all differ from "1" in the previous test.
+````{r}
+## GIVE IT PREDICTED PROBS AND TRUTH LABELS (0/1), RETURNS VARIOUS DIAGNOSTICS
+
+class_diag <- function(probs,truth){
+#CONFUSION MATRIX: CALCULATE ACCURACY, TPR, TNR, PPV
+
+if(is.character(truth)==TRUE) truth<-as.factor(truth)
+if(is.numeric(truth)==FALSE & is.logical(truth)==FALSE) truth<-as.numeric(truth)-1
+
+tab<-table(factor(probs>.5,levels=c("FALSE","TRUE")),factor(truth, levels=c(0,1)))
+acc=sum(diag(tab))/sum(tab)
+sens=tab[2,2]/colSums(tab)[2]
+spec=tab[1,1]/colSums(tab)[1]
+ppv=tab[2,2]/rowSums(tab)[2]
+f1=2*(sens*ppv)/(sens+ppv)
+
+#CALCULATE EXACT AUC
+ord<-order(probs, decreasing=TRUE)
+probs <- probs[ord]; truth <- truth[ord]
+
+TPR=cumsum(truth)/max(1,sum(truth)) 
+FPR=cumsum(!truth)/max(1,sum(!truth))
+
+dup<-c(probs[-1]>=probs[-length(probs)], FALSE)
+TPR<-c(0,TPR[!dup],1); FPR<-c(0,FPR[!dup],1)
+n <- length(TPR)
+auc<- sum( ((TPR[-1]+TPR[-n])/2) * (FPR[-1]-FPR[-n]) )
+
+data.frame(acc,sens,spec,ppv,f1,auc)
+}
+
+k=10
+testdata<-newdata%>%mutate(PositionPF=ifelse(newdata$Position=="PF",1,0),TeamHOU=ifelse(newdata$Team=="HOU",1,0),TeamORL=ifelse(newdata$Team=="ORL",1,0))
+folds <- ntile(1:nrow(testdata),n=10)
+diags<-NULL
+for(i in 1:k){
+  train <- testdata[folds!=i,] #create training set (all but fold i)
+  test <- testdata[folds==i,] #create test set (just fold i)
+  truth <- test$RankTop #save truth labels from fold i
+  
+  fit <- glm(RankTop~PositionPF+TeamHOU+TeamORL+Cash.Earned+Cash.Earned.Per.Game, data = train,family="binomial")
+          
+  probs <- predict(fit, newdata=test, type="response")
+  
+  diags<-rbind(diags,class_diag(probs,truth))
+}
+diags%>%summarize_all(mean)
+````
+<h4>After running the 10-fold CV on the lasso variables, the AUC is 0.57 and the accuracy is 0.7566667, which differs from the model above.

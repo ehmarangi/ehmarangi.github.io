@@ -1,0 +1,204 @@
+---
+title: 'Project 1: Exploratory Data Analysis'
+author: "Erika Marangi"
+date: 'October 18,2020'
+output:
+  html_document:
+    toc: yes
+    toc_float:
+      collapsed: no
+      smooth_scroll: yes
+  pdf_document:
+    toc: no
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, eval = TRUE, fig.align = "center", warning = F, message = F,
+tidy=TRUE, tidy.opts=list(width.cutoff=60), R.options=list(max.print=100))
+```
+<h1>Introduction Paragraph<h1>
+
+<h4>For my project, I chose to analyze data from NBA players. One of the datasets contained the top 100 player's names, rank, and team. The second dataset contained player's names, position, type of injury, the amount of money they made while they were injured, and the number of games missed due to their injuries. I found this data online from two different websites and then created an excel sheet to organize the data and import it into R. This data interested me beacuse I love sports, and I was curious to see how a players rank and position could effect the amount of money they earned, the severity of injury, or what team they were on. Overall, the topics of sports and medicine seemed to work well together in these datasets which prompted me to use them for my project. 
+
+<h1>Importing Datasets
+
+```{r}
+library(tidyverse)
+library(plyr)
+playerrank<-read.csv("~/Desktop/SDS 348/Project 1/Player Rank.csv")
+playerinjurydata<-read.csv("~/Desktop/SDS 348/Project 1/Player injury data.csv")
+head(playerinjurydata)
+head(playerrank)
+nrow(playerinjurydata)
+nrow(playerrank)
+ncol(playerinjurydata)
+ncol(playerrank)
+```
+<h4>This shows my two data sets sepreately, with their different rows and columns. Originally, there were 100 rows in each data set. The player injury data set had 5 columns and the player rank data set had 3 columns.
+<h1> Joining/Merging
+```{r}
+joinedplayerdata<-full_join(playerinjurydata,playerrank, by="Player.Name")
+joinedplayerdata%>%arrange(`Player.Name`)
+nrow(joinedplayerdata)
+ncol(joinedplayerdata)
+```
+<h4>I preformed a full join on my two datasets, joining them with their common variable, player name. Once joined, there were still 100 rows in the dataset but there are 7 columns. No data was dropped from this join because I simply brought two datasets together based off of their common variable,and both datasets had the same players. I chose this type of join because I wanted all of the data from the two sets to be present in the new dataset. When I joined my data, it was already tidied.  
+
+````{r}
+no.najoinedplayerdata<-joinedplayerdata%>%na.omit()
+nrow(joinedplayerdata)-nrow(no.najoinedplayerdata)
+anti_join(joinedplayerdata,no.najoinedplayerdata,by="Player.Name")
+````
+<h4>When I removed the NA's from the data set, 9 rows were removed which means that the data for 9 players was omitted. The players that were removed from the dataset due to NA's were Dirk Nowitzki, Kelly Olynyk, Kent Bazemore, PJ Tucker, Tobias Harris, Nikola Mirotic, Harrison Mavericks, Joe Ingles, and Nikola Jokic.The reason that these players were removed due to NA's is because they did not have data in one of my datasets.
+
+<h1> Wrangling:Summary Statistics
+````{r}
+joinedplayerdata%>%filter(`Player.Rank`<10)
+`````
+<h4>This filter shows me the top 10 ranked players in my data set. (From number 10 to number 1). 
+````{r}
+selected<-joinedplayerdata%>%select(`Player.Name`,Injury,`Games.Missed`)
+head(selected)
+````
+<h4>If I wanted to look at just a data set with the player names, their injuries, and the number of games they had to miss, I would use the select function above. 
+````{r}
+arrange1<-joinedplayerdata%>%arrange(Games.Missed)
+head(arrange1)
+````
+<h4>This function allowed for me to see which players missed the most games throughout their time of injury. It was arranged from the least amount of games missed to the most.
+```{r}
+group1<-no.najoinedplayerdata%>%group_by(Injury)
+summarizedinjury<-group1%>%summarise(unique(Injury))
+head(summarizedinjury)
+nrow(summarizedinjury)
+summarizednona<-summarizedinjury%>%na.omit()
+````
+<h4>The group by function allowed for me to group the data based off of the types of injuries. Then, the summarize data showed me a table of all different injuries, and I was able to conclude that there are 19 unique injuries. 
+````{r}
+cashearned<-joinedplayerdata$Cash.Earned.While.Injured
+nocommadata<-joinedplayerdata%>%mutate("CashEarned"=str_replace_all(Cash.Earned.While.Injured,",",""))
+````
+<h4>I ran into a problem with my data not being numeric with the commas, so I removed them from the data.
+```{r}
+nocommadata
+nocommadata<-nocommadata%>%mutate(CashEarned=as.numeric(CashEarned))
+newfulldata<-nocommadata%>%mutate(CashEarnedPerGame=CashEarned/Games.Missed)
+````
+<h4>This mutation allowed for me to create a column that shows how much money each Player made per game they missed. This helped standardize the data a bit, because before, some players looked liked they made much more money, but that was only because they had been out for many games. 
+
+````{r}
+library(dplyr)
+detach(package:plyr)
+data2<-newfulldata%>%na.omit()%>%select(-Cash.Earned.While.Injured)%>%glimpse()
+
+mean(data2$CashEarnedPerGame)
+
+quantile(data2$CashEarnedPerGame)
+
+mean(data2$Games.Missed)
+
+quantile(data2$Games.Missed)
+
+data2%>%group_by(Injury)%>%summarise(mean_cashearnedpergame=mean(CashEarnedPerGame,na.rm = T),min_cashearnedpergame=min(CashEarnedPerGame,na.rm = T),max_cashearnedpergame=max(CashEarnedPerGame,na.rm = T))
+
+data2%>%group_by(Position)%>%summarise(mean_cashearnedpergame=mean(CashEarnedPerGame,na.rm = T),min_cashearnedpergame=min(CashEarnedPerGame,na.rm = T),max_cashearnedpergame=max(CashEarnedPerGame,na.rm = T))
+
+data2%>%group_by(Team)%>%summarise(mean_rank=mean(Player.Rank),sd_rank=sd(Player.Rank))
+
+data2%>%group_by(Team)%>%summarise(mean_cash=mean(CashEarnedPerGame))
+
+data2%>%summarise(n_distinct(Position))
+
+data2%>%group_by(Team)%>%summarise(max_cash=max(CashEarnedPerGame))
+
+data2%>%group_by(Team,Injury)%>%summarize(mean_missed=mean(Games.Missed))
+data2%>%group_by(Team,Injury)%>%summarize(mean_missed=mean(Games.Missed))%>%pivot_wider(names_from = Injury, values_from=mean_missed)
+````
+<h4>To begin, I looked at the mean and quantile spread of both the amount of money earned per game and the number of games missed. Then, I looked at the mean,minimum, and maximum amount of money made per game that a player missed, grouped by the type of injury. Then, I looked at the same data but grouped by the players position. Next, I looked at the mean player rank and standard deviation of players based off of the team they are on. The team with the best players on average was HOU. I then looked at the mean cash earned per team. I was interested in knowing the maximum amount of money a player made during a missed game based off of the team they were on.The maximum was made by SAS. I grouped the data by both team and the type of injury, and looked at the mean number of games missed by the players. Then, I untidied the data and made the table much wider by creating new columns for each individual injury. 
+
+<h1>Visualizing
+````{r}
+library(dplyr)
+library(ggplot2)
+library(tibble)
+library(reshape2 )
+numericdata<-select_if(newfulldata,is.numeric)
+no.nanumeric<-numericdata%>%na.omit
+cor(no.nanumeric)
+cor(no.nanumeric)%>%as.data.frame%>%rownames_to_column%>%pivot_longer(-1)%>%ggplot(aes(rowname,name, fill=value))+geom_tile()+geom_text(aes(label=round(value,2)))+scale_fill_gradient2(low = "red",mid = "white",high="blue")
+````
+<h4>This heatmap shows the different correlations between my four numeric variables. The highest (positive) correlation is between the number of games missed and the amount of money earned. This makes sense, because the more games that were missed, the more money the players made while they were out. The most negative correlation is between the players rank and the amount of money they made per game. This also makes sense because the lower a player is ranked numerically (top players), they more they make per game. 
+
+````{r}
+ggplot(data = newfulldata,aes(x=Player.Rank,y=CashEarned))+geom_point(aes(color=Team))+scale_fill_gradient()+ggtitle("Money Earned and Player Rank")+theme_dark()+geom_bar(stat = "summary")
+````
+<h4> This plot is another way of showing the correlation between the amount of money earned and the players rank. Although most players make around the same amount of money per game that they miss, the top players (lowest player rank) make slightly more money. The data is colored based off of the team that each player is on.
+
+````{r}
+ggplot(data = no.najoinedplayerdata,aes(x=Games.Missed,y=Position))+geom_point(aes(color=Position))+scale_fill_gradient()+ggtitle("Effect of Injury and Position on Number of Games Missed")+facet_wrap(~Injury)+scale_x_continuous(breaks = seq(0,60,10))+theme_light()
+
+ggplot(data = no.najoinedplayerdata,aes(x=Games.Missed,y=Injury))+geom_point(aes(color=Injury))+scale_fill_gradient()+ggtitle("Effect of Injury and Position on Number of Games Missed")+facet_wrap(~Position)+scale_x_continuous(breaks = seq(0,60,10))+theme_light()
+````
+<h4> These graphs are seperated based off of the position a player plays at. Then, we can see how many games were missed due to which type of Injury. From these graphs, I can see that leg, knee, and heel injuries tend to put players out for the longest amount of time. There are more hand injuries in the post guard position, and about equal numbners of leg injuries thoughout all of the different positions. 
+
+<h1>Dimensionality Reduction
+```{r}
+library(cluster)
+pam1<-no.nanumeric%>%pam(k=4)
+pam1
+pamclust<-no.nanumeric%>%mutate(cluster=as.factor(pam1$clustering))
+pamclust%>%ggplot(aes(Games.Missed,Player.Rank,CashEarned,CashEarnedPerGame,color=cluster))+geom_point()
+````    
+````{r}
+library(tidyverse)
+head(no.nanumeric)
+newdat<-no.nanumeric%>%scale()
+cov(newdat)%>%round(2)
+#PCA
+new_pca<-princomp(newdat)
+summary(new_pca,loadings = T)
+#varience by each PC
+eigval<-new_pca$sdev^2
+#cumulative varience
+varprop=round(eigval/sum(eigval),2)
+
+
+ggplot() + geom_bar(aes(y=varprop, x=1:4), stat="identity") + xlab("") + geom_path(aes(y=varprop, x=1:4)) + 
+  geom_text(aes(x=1:4, y=varprop, label=round(varprop, 2)), vjust=1, col="white", size=4) + 
+  scale_y_continuous(breaks=seq(0, .6, .2), labels = scales::percent) + 
+  scale_x_continuous(breaks=1:4)
+
+````
+````{r}
+datadf<-data.frame(PC1=new_pca$scores[,1],PC2=new_pca$scores[,2])
+ggplot(datadf,aes(PC1,PC2))+geom_point()
+````
+
+````{r}
+eigval
+summary(new_pca,loadings = T)
+````
+````{r}
+#highest scores on PC1
+Name<-rownames(newdat)
+new_pca$scores%>%as.data.frame%>%cbind(Name,.)%>%top_n(3,Comp.1)%>%select(Name:Comp.4)
+#lowest scores  on PC1
+new_pca$scores%>%as.data.frame%>%cbind(Name,.)%>%top_n(3, wt=desc(Comp.1))%>%select(Name:Comp.4)
+````
+````{r}
+#highest scores on PC2
+new_pca$scores%>%as.data.frame%>%cbind(Name,.)%>%top_n(3, wt=Comp.2)%>%select(Name:Comp.4)
+#lowest scores on PC2
+new_pca$scores%>%as.data.frame%>%cbind(Name,.)%>%top_n(3, wt=desc(Comp.2))%>%select(Name:Comp.4)
+````
+````{r}
+new_pca$loadings[1:4,1:4]%>%as.data.frame%>%rownames_to_column%>%ggplot()+geom_hline(aes(yintercept=0),lty=2)+geom_vline(aes(xintercept=0),lty=2)+ylab("PC2")+xlab("PC1")+geom_segment(aes(x=0,y=0,xend=Comp.1,yend=Comp.2),arrow = arrow(),col="red")+geom_label(aes(x=Comp.1*.9,y=Comp.2+.1,label=rowname))
+````
+````{r}
+library(factoextra)
+fviz_pca_biplot(new_pca)+coord_fixed()
+````
+````{r}
+
+````
+<h4> This dimensionality assessment allowed for me to clearly see the connection between the different numeric variables in my dataset.First, I used PAM to create a cluster map of my data. However, the cluster graph did not come out as clearly as I would have hoped, so I decided to run a PCA analysis. I made a scree plot to see how many PC's to keep and decided on two. Then I plotted the to PC scores. After that, I looked at the extremes of the PC data. Next, I plotted the loadings to show correlations between the different data vectors. There is a strong correlation between the number of games missed and the overall cash earned which would be expected. Lastly, I combined the PC score plot and the loading plot to finalize the analysis. 
