@@ -74,14 +74,20 @@
 <script src="/rmarkdown-libs/anchor-sections/anchor-sections.js"></script>
 
 
+<p><img src="/post/2020-12-08-blog-1_files/memepic.jpeg" />
+Here I use common R syntax to produce the word “Merry” as an output.</p>
 <pre class="r"><code>library(reticulate)
-test&lt;-&quot;Merry&quot;
-test</code></pre>
+Happy&lt;-&quot;Merry&quot;
+Happy</code></pre>
 <pre><code>## [1] &quot;Merry&quot;</code></pre>
-<pre class="python"><code>test=&quot;Christmas&quot;
-print(test)</code></pre>
-<pre><code>## Christmas</code></pre>
-<p>When using R and python, the two can preform the same functions, but the syntax is different.</p>
+<p>Next, I use Python syntax to produce the word “Christmas”</p>
+<pre class="python"><code>Holidays=&quot;Christmas!&quot;
+print(Holidays)</code></pre>
+<pre><code>## Christmas!</code></pre>
+<p>Reticulate will allow both functions to be used together!</p>
+<pre class="python"><code>print(r.Happy,Holidays)</code></pre>
+<pre><code>## Merry Christmas!</code></pre>
+<p>When using R and python, the two can preform the same functions, but the syntax is different. Reticulate allows for R and Python to communicate together which is pretty cool!</p>
 
             
         <hr>         <div class="related-posts">
